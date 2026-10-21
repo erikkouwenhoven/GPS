@@ -1,15 +1,23 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from Comm.serial_reader import Serial_reader
+from Comm.Messages.NMEA_VTG_message import VTGMessage
+from Comm.Messages.nmea_message import NMEAMessage
+from Comm.serialconnector import SerialConnector
 from settings import Settings
-from Comm.Messages.NMEA0183_interpreter import NMEA0183_interpreter
-from Model.GPS_Data import GpsData
 
 class Application:
 
     def __init__(self):
         self.initializeLogging()
+        print(NMEAMessage(b'$VWMTW,16.5,C*10\r\n').calculate_check_sum())
+        print(NMEAMessage(b'$VWMTW,16.5,C*10\r\n').isolate_checksum())
+        print(NMEAMessage(b'$VWMTW,16.5,C*10\r\n').isolate_bare_message())
+        print(NMEAMessage(b'$VWMTW,16.5,C*10\r\n').is_consistent())
+        print(NMEAMessage(b'$GPVTG,360.0,T,348.7,M,000.0,N,000.0,K*43').is_consistent())
+        print(VTGMessage.from_speed(1).msg)
+        print(VTGMessage.from_speed(1).msg.is_consistent())
+
         self.run()
 
     def initializeLogging(self):
@@ -25,20 +33,22 @@ class Application:
         logging.info('Start application')
 
     def run(self):
-        gpsData = GpsData()
-        serialReader = Serial_reader()
-        nmea0183_interpreter = NMEA0183_interpreter(gpsData)
-        while True:
-            self.handleSerialBuffer(serialReader, nmea0183_interpreter)
+        speed = 0.0
+        serial_connector = SerialConnector()
+        if serial_connector.ser:
+            while True:
+                while line := serial_connector.get_line():
+                    logging.debug(f"Read data: {line}")
+                    print(f"Read data: {line} type={NMEAMessage(line).sentence_id()}")
 
-    def handleSerialBuffer(self, serialReader, nmea0183_interpreter):
-        line = serialReader.getLine()
-        logging.debug("Read data: {}".format(line))
-        while line:
-            nmea0183_interpreter.feedLine(line)
-            line = serialReader.getLine()
-            logging.debug("Read data: {}".format(line))
-
+                vtg_msg = VTGMessage.from_speed(speed)
+                serial_connector.put_line(vtg_msg.message)
+                speed += 0.1
+        else:
+            print("No serial connector")
 
 if __name__ == "__main__":
     app = Application()
+
+# stoppen en reader afsluiten (close port)
+# setje van inputregels lezen

@@ -9,7 +9,7 @@ class Settings:
 
     def __init__(self):
         self.config = configparser.ConfigParser()
-        currDir = os.path.dirname(os.path.dirname(__file__))
+        currDir = os.path.dirname(__file__)
         configFilePath = currDir + r'\config.ini'
         self.config.read(configFilePath)
 
@@ -20,8 +20,10 @@ class Settings:
         return self.config.get('COMMUNICATION', 'serialPort')
 
     def getBaudrate(self):
-        return self.config.get('COMMUNICATION', 'baudrate')
+        return int(self.config.get('COMMUNICATION', 'baudrate'))
 
-    def getTimeout(self):
-        return self.config.get('COMMUNICATION', 'timeout')
-
+    def getTimeout(self) -> float | None:
+        try:
+            return float(self.config.get('COMMUNICATION', 'timeout'))
+        except ValueError:
+            return None
