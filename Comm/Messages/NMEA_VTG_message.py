@@ -1,5 +1,5 @@
 from __future__ import annotations
-from Comm.Messages.convert_speed import kmh_to_knots
+from Utils.convert_speed import kmh_to_knots
 from Comm.Messages.nmea_message import NMEAMessage
 
 
@@ -19,6 +19,8 @@ class VTGMessage:
                010.2,K      Ground speed, K=Kilometers per hour
     """
 
+    SENTENCE_ID = b'VTG'
+
     def __init__(self, line: bytes):
         self.msg = NMEAMessage(line)
 
@@ -26,5 +28,5 @@ class VTGMessage:
     def from_speed(cls, speed: float, unit_knots: bool = True) -> VTGMessage:
         speed_knots = speed if unit_knots else speed * kmh_to_knots
         speed_kmh = speed if not unit_knots else speed / kmh_to_knots
-        msg = f"$GPVTG,360.0,T,348.7,M,{speed_knots:05.1f},N,{speed_kmh:05.1f},K*43".encode()
-        return VTGMessage(NMEAMessage(msg).update_check_sum().message)
+        msg = NMEAMessage(f"$GPVTG,360.0,T,348.7,M,{speed_knots:05.1f},N,{speed_kmh:05.1f},K*43".encode())
+        return VTGMessage(msg.update_check_sum().message)
