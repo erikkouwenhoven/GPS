@@ -21,5 +21,13 @@ def initialize_logging():
 
 if __name__ == "__main__":
     initialize_logging()
+    # TEST
+    from Comm.Messages.NMEA_RMC_message import RMCMessage
+    test=RMCMessage(b'$GPRMC,161335.00,A,5210.28418,N,00423.99276,E,0.432,,271026,,,A*71')
+    print(f"{test.location=}")
+    print(f"{test.fix_datetime=}")
+    print(f"{test.has_fix=}")
+    print(f"{test.speed_knots=}")
+
     # The entry point to start the async loop
     asyncio.run(main())

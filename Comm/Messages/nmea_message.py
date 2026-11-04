@@ -19,27 +19,27 @@ class NMEAMessage:
 
     """
 
-    def __init__(self, message: bytes):
-        self.message = message
+    def __init__(self, sentence: bytes):
+        self.sentence = sentence
 
     def talker_id(self):
         try:
-            return self.message[1:3]
+            return self.sentence[1:3]
         except IndexError:
             return None
 
     def sentence_id(self) -> bytes | None:
         try:
-            return self.message[3:6]
+            return self.sentence[3:6]
         except IndexError:
             return None
 
     def isolate_checksum(self) -> bytes | None:
         try:
-            i_end = self.message.find(b'*')
+            i_end = self.sentence.find(b'*')
         except ValueError:
             return None
-        return self.message[i_end + 1:].strip()
+        return self.sentence[i_end + 1:].strip()
 
     def is_consistent(self) -> bool:
         if self.isolate_checksum() == self.calculate_check_sum():
@@ -47,18 +47,18 @@ class NMEAMessage:
         else:
             return False
 
-    def isolate_bare_message(self) -> bytes | None:
+    def bare_sentence(self) -> bytes | None:
         try:
-            i_start = self.message.index(b'$')
-            i_end = self.message.find(b'*')
+            i_start = self.sentence.index(b'$')
+            i_end = self.sentence.find(b'*')
         except ValueError:
             return None
         if i_start > i_end:
             return None
-        return self.message[i_start + 1:i_end]
+        return self.sentence[i_start + 1:i_end]
 
     def calculate_check_sum(self) -> bytes | None:
-        if bare_msg := self.isolate_bare_message():
+        if bare_msg := self.bare_sentence():
             calc_checksum = 0
             for s in bare_msg:
                 calc_checksum ^= s
@@ -68,11 +68,21 @@ class NMEAMessage:
 
     def update_check_sum(self) -> NMEAMessage | None:
         try:
-            i_end = self.message.find(b'*')
+            i_end = self.sentence.find(b'*')
         except ValueError:
             return None
-        self.message = self.message[:i_end + 1] + self.calculate_check_sum()
+        self.sentence = self.sentence[:i_end + 1] + self.calculate_check_sum()
         return self
 
+    def items(self) -> list[bytes] | None:
+        if bare_sentence := self.bare_sentence():
+            return [item for item in bare_sentence.split(b',')][1:]
+        else:
+            return None
+
+    @classmethod
+    def from_items(cls, items: list[bytes]) -> NMEAMessage:
+        sentence = b''
+
     def __repr__(self):
-        return str(self.message)
+        return str(self.sentence)
