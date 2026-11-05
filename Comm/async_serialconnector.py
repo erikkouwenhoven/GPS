@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import serial_asyncio
+from serial.serialutil import SerialException
 
 
 class AsyncSerialConnector:
@@ -16,13 +17,15 @@ class AsyncSerialConnector:
         """Establishes an asynchronous connection to the serial port."""
         logging.debug(f"Connecting to {self.port} at {self.baudrate} baud...")
         # open_serial_connection creates an asyncio StreamReader and StreamWriter
-        self.reader, self.writer = await serial_asyncio.open_serial_connection(
-            url=self.port,
-            baudrate=self.baudrate
-        )
-        self.is_running = True
-        logging.debug(f"Connector: {self.reader}, {self.writer}")
-        logging.debug("Connected successfully.")
+        try:
+            self.reader, self.writer = await serial_asyncio.open_serial_connection(
+                url=self.port,
+                baudrate=self.baudrate
+            )
+            self.is_running = True
+            logging.debug(f"Connector: {self.reader}, {self.writer} connected successfully")
+        except SerialException as e:
+            logging.error(f"Error connecting to {self.port}: {e}")
 
     async def read_messages(self, message_callback):
         """Asynchronously reads data line-by-line and triggers a callback function."""

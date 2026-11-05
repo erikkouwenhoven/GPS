@@ -1,11 +1,13 @@
 import asyncio
 import logging
 
+from Application.model import Model
 from Comm.Messages.NMEA_RMC_message import RMCMessage
 from Comm.Messages.NMEA_VTG_message import VTGMessage
 from Comm.Messages.nmea_message import NMEAMessage
 from Comm.async_serialconnector import AsyncSerialConnector
 from Utils.settings import Settings
+from WebServer.web_server import start_server
 
 
 class Processor:
@@ -18,6 +20,7 @@ class Processor:
     """
     def __init__(self, rs422_connector: AsyncSerialConnector):
         self.rs422_connector = rs422_connector
+        self.model = Model()
 
     @staticmethod
     async def proc_rs422_line(line_bytes: bytes) -> None:
@@ -33,6 +36,7 @@ class Processor:
             logging.debug(f"Processing RMC: {line_bytes}")
             rmc_msg = RMCMessage(line_bytes)
             if rmc_msg.has_fix:
+                self.model.set_fix(rmc_msg.fix_datetime)
                 speed = rmc_msg.speed_knots
                 vtg_msg = VTGMessage.from_speed(speed)
                 sentence = vtg_msg.msg.sentence
@@ -48,8 +52,9 @@ async def main() -> None:
     try:
         await gps_connector.connect()
         await rs422_connector.connect()
-
         processor = Processor(rs422_connector)
+
+        await start_server()
 
         reading_task = asyncio.create_task(rs422_connector.read_messages(processor.proc_rs422_line))
         writing_task = asyncio.create_task(gps_connector.read_messages(processor.proc_gps_line))
@@ -58,7 +63,7 @@ async def main() -> None:
         while True:
             await asyncio.sleep(3600)  # Keep running indefinitely
 
-    except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
+    except asyncio.exceptions.CancelledError:
         print("Stopping application...")
     finally:
         await gps_connector.close()
@@ -66,4 +71,11 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Application stopped manually.")
+
+# app = web.Application()
+# app.add_routes([web.get('/', handle),
+#                 web.get('/{name}', handle)])
