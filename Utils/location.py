@@ -39,4 +39,5 @@ class Location:
             return None
 
     def __repr__(self):
-        return f"self.latitude={self.latitude}, self.longitude={self.longitude}"
+        return (f"LAT: {abs(self.latitude):.3f} {'N' if self.latitude > 0.0 else 'S'}, "
+                f"LONG: {abs(self.longitude):.3f} {'E' if self.latitude > 0.0 else 'W'}")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
+import pytz
 from Utils.location import Location
 from Comm.Messages.nmea_message import NMEAMessage
 
@@ -63,7 +64,8 @@ class RMCMessage:
         try:
             if (fix_time := self.items[RMCMessage.Coding.index('FIX_TIMESTAMP')]) and (fix_date := self.items[RMCMessage.Coding.index('FIX_DATE')]):
                 timestamp = datetime.strptime((fix_date + fix_time[:-3]).decode(encoding='utf-8'), '%d%m%y' + '%H%M%S')
-                return timestamp
+                utc_dt = pytz.utc.localize(timestamp).astimezone(pytz.timezone("Europe/Amsterdam"))
+                return utc_dt
             else:
                 return None
         except ValueError:
