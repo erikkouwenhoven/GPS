@@ -41,7 +41,8 @@ class VTGMessage:
         speed_knots = speed if unit_knots else speed * kmh_to_knots
         speed_kmh = speed if not unit_knots else speed / kmh_to_knots
         msg = NMEAMessage(f"$GPVTG,360.0,T,348.7,M,{speed_knots:05.1f},N,{speed_kmh:05.1f},K*43".encode())
-        return VTGMessage(msg.update_check_sum().sentence)
+        assert (updated_msg := msg.update_check_sum())
+        return VTGMessage(updated_msg.sentence)
 
     def is_complete(self) -> bool:
         if self.true_course and self.magnetic_course and self.speed_knots and self.speed_kmh:
@@ -54,7 +55,7 @@ class VTGMessage:
             if (true_course := float(self.items[VTGMessage.Coding.index('TRUE_COURSE_VALUE')])) and self.items[VTGMessage.Coding.index('TRUE_COURSE_LABEL')] == 'T':
                 return true_course
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -63,7 +64,7 @@ class VTGMessage:
             if (magnetic_course := float(self.items[VTGMessage.Coding.index('MAGN_COURSE_VALUE')])) and self.items[VTGMessage.Coding.index('MAGN_COURSE_LABEL')] == 'M':
                 return magnetic_course
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -72,7 +73,7 @@ class VTGMessage:
             if (speed_knots := float(self.items[VTGMessage.Coding.index('SPEED_KNOTS_VALUE')])) and self.items[VTGMessage.Coding.index('SPEED_KNOTS_LABEL')] == 'N':
                 return speed_knots
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -81,5 +82,5 @@ class VTGMessage:
             if (speed_kmh := float(self.items[VTGMessage.Coding.index('SPEED_KMH_VALUE')])) and self.items[VTGMessage.Coding.index('SPEED_KMH_LABEL')] == 'K':
                 return speed_kmh
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None

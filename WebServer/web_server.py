@@ -1,9 +1,12 @@
 import logging
+import os
 from aiohttp import web
 from bs4 import BeautifulSoup
 from datetime import datetime
+from Application.GPX.gpx_export import export_gpx
 from Application.model import Model
 from Utils.convert_speed import kmh_to_knots
+from Utils.settings import Settings
 from Utils.utils import pretty_time_diff
 
 
@@ -19,16 +22,45 @@ class WebServer:
 
         @routes.get('/')
         async def _(request):
-            return main_form(r'WebServer\HTML\main.html', self.model)
+            return main_form(r'WebServer/HTML/main.html', self.model)
+
+        @routes.get('/download')
+        async def handle_download(request):
+            # Pad naar het bestand dat je wilt laten downloaden
+            file_path = r"C:\Users\erikk\PycharmProjects\GPS\Application\GPX\filename.xml"  # TODO uit settings halen, fienaam opbouwn uit datum
+            export_gpx(self.model.locations, file_path)
+
+            if not os.path.exists(file_path):
+                return web.Response(text="Bestand niet gevonden", status=404)
+
+            # Logische return voor download: web.FileResponse
+            # 'headers' dwingen de browser om het bestand op te slaan onder een specifieke naam
+            filename = os.path.basename(file_path)
+            return web.FileResponse(path=file_path, headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+        @routes.post('/stop')
+        async def handle_stop(request):
+            # Logica om de acquisitie stop te zetten
+            print("Acquisitie wordt gestopt...")
+            # Voer hier je stop-logica uit
+
+            # Logische return voor een actie: Redirect terug naar de hoofdpagina
+            raise web.HTTPFound(location='/')
+
+        @routes.post('/')
+        async def _(request):
+            data = await request.post()
+            return main_form(r'WebServer/HTML/main.html', self.model)
 
         web_app.add_routes(routes)
 
         # --- Configure AppRunner instead of web.run_app() ---
         self.runner = web.AppRunner(web_app)
         await self.runner.setup()
-        site = web.TCPSite(self.runner, host='Dell_16', port=8080)
+        # site = web.TCPSite(self.runner, host=Settings().get_http_host(), port=Settings().get_http_port())
+        site = web.TCPSite(self.runner, "0.0.0.0", port=Settings().get_http_port())
         await site.start()
-        print("Web server started at http://Dell_16:8080")
+        print(f"Web server started at http://{Settings().get_http_host()}:{Settings().get_http_port()}")
 
     async def stop_server(self):
         await self.runner.cleanup()
@@ -38,21 +70,32 @@ class WebServer:
 def main_form(document: str, model: Model):
     s = open(document, "r")
     soup = BeautifulSoup(s.read(), 'html.parser')
-    running_since_label = soup.find(id="running_since")
-    running_since_label.string = pretty_time_diff(model.start_time_stamp, datetime.now().timestamp())
-    fix_date_time_label = soup.find(id="fix_date_time")
-    fix_date_time_label.string = model.fix_datetime.strftime("%d/%m/%Y, %H:%M:%S") if model.fix_datetime else "NO FIX"
-    speed_label = soup.find(id="speed")
-    speed_label.string = f"{model.speed_knots:.2f} knots {model.speed_knots / kmh_to_knots:.2f} km/h"
-    location_label = soup.find(id="position")
-    location_label.string = f"{model.location}"
-    satellites_label = soup.find(id="satellites")
-    satellites_label.string = f"{model.num_satellites}"
-    height_label = soup.find(id="height")
-    height_label.string = f"{model.height}"
-    height_unit_label = soup.find(id="height_unit")
-    height_unit_label.string = f"{model.height_unit.decode('utf8')}"
-    hor_dilution_label = soup.find(id="hor_dilution")
-    hor_dilution_label.string = f"{model.hor_dilution}"
+
+    if serial_connection_label := soup.find(id="serial_connection"):
+        serial_connection_label.string = ",".join(f"{key}: {val}" for key, val in model.is_running_connector.items())
+
+    if running_since_label := soup.find(id="running_since"):
+        running_since_label.string = pretty_time_diff(model.start_time_stamp, datetime.now().timestamp())
+
+    if fix_date_time_label := soup.find(id="fix_date_time"):
+        fix_date_time_label.string = model.fix_datetime.strftime("%d/%m/%Y, %H:%M:%S") if model.fix_datetime else "NO FIX"
+
+    if speed_label := soup.find(id="speed"):
+        if model.speed_knots:
+            speed_label.string = f"{model.speed_knots:.2f} knots {model.speed_knots / kmh_to_knots:.2f} km/h"
+
+    if location_label := soup.find(id="position"):
+        location_label.string = f"{model.location}"
+
+    if satellites_label := soup.find(id="satellites"):
+        satellites_label.string = f"{model.num_satellites}"
+
+    if height_label := soup.find(id="height"):
+        height_label.string = f"{model.height}"
+    if (height_unit_label := soup.find(id="height_unit")) and (height_unit := model.height_unit):
+        height_unit_label.string = f"{height_unit.decode('utf8')}"
+
+    if hor_dilution_label := soup.find(id="hor_dilution"):
+        hor_dilution_label.string = f"{model.hor_dilution}"
 
     return web.Response(text=soup.prettify(), content_type='text/html')

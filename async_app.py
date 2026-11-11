@@ -7,7 +7,7 @@ from Application.orchestrator import main
 
 
 def initialize_logging():
-    logging_path = Settings().getLoggingPath()
+    logging_path = Settings().get_logging_path()
     if not os.path.exists(logging_path):
         os.mkdir(logging_path)
         print("{} created".format(logging_path))

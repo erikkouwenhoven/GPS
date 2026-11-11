@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 import pytz
-from Utils.location import Location
+from Application.location import Location
 from Comm.Messages.nmea_message import NMEAMessage
 
 
@@ -46,7 +46,7 @@ class RMCMessage:
         self.items = self.msg.items()
 
     def is_complete(self) -> bool:
-        if self.true_course and self.magnetic_course and self.speed_knots and self.speed_kmh:
+        if self.true_course and self.magnetic_course and self.speed_knots:
             return True
         return False
 
@@ -56,7 +56,7 @@ class RMCMessage:
             if self.items[RMCMessage.Coding.index('FIX_STATUS')] == b'A':
                 return True
             return False
-        except ValueError:
+        except (ValueError, IndexError):
             return False
 
     @property
@@ -68,17 +68,19 @@ class RMCMessage:
                 return utc_dt
             else:
                 return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
     def location(self) -> Location | None:
-        if (long_val := self.items[RMCMessage.Coding.index('LONGITUDE_VALUE')].decode(encoding='utf-8')) and\
-                (long_hemi := self.items[RMCMessage.Coding.index('LONGITUDE_HEMISPHERE')].decode(encoding='utf-8')) and\
-                (lat_val := self.items[RMCMessage.Coding.index('LATITUDE_VALUE')].decode(encoding='utf-8')) and\
-                (lat_hemi := self.items[RMCMessage.Coding.index('LATITUDE_HEMISPHERE')].decode(encoding='utf-8')):
-            return Location(lat_val, lat_hemi, long_val, long_hemi)
-        else:
+        try:
+            if (long_val := self.items[RMCMessage.Coding.index('LONGITUDE_VALUE')].decode(encoding='utf-8')) and\
+                    (long_hemi := self.items[RMCMessage.Coding.index('LONGITUDE_HEMISPHERE')].decode(encoding='utf-8')) and\
+                    (lat_val := self.items[RMCMessage.Coding.index('LATITUDE_VALUE')].decode(encoding='utf-8')) and\
+                    (lat_hemi := self.items[RMCMessage.Coding.index('LATITUDE_HEMISPHERE')].decode(encoding='utf-8')):
+                return Location(lat_val, lat_hemi, long_val, long_hemi)
+            return None
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -87,7 +89,7 @@ class RMCMessage:
             if true_course := float(self.items[RMCMessage.Coding.index('COURSE')]):
                 return true_course
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -96,7 +98,7 @@ class RMCMessage:
             if (magnetic_course := float(self.items[RMCMessage.Coding.index('MAGN_COURSE_VALUE')])) and self.items[RMCMessage.Coding.index('MAGN_COURSE_LABEL')] == 'M':
                 return magnetic_course
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -105,5 +107,5 @@ class RMCMessage:
             if speed_knots := float(self.items[RMCMessage.Coding.index('SPEED_KNOTS_VALUE')]):
                 return speed_knots
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None

@@ -1,6 +1,6 @@
 import os
-import datetime
 import configparser
+from typing import Union
 
 
 class Settings:
@@ -9,24 +9,27 @@ class Settings:
 
     def __init__(self):
         self.config = configparser.ConfigParser()
-        currDir = os.path.dirname(__file__)
-        configFilePath = os.path.join(currDir, 'config.ini')
-        self.config.read(configFilePath)
+        curr_dir = os.path.dirname(__file__)
+        config_file_path = os.path.join(curr_dir, 'config.ini')
+        self.config.read(config_file_path)
 
-    def getLoggingPath(self):
-        currDir = os.path.dirname(__file__)
-        configFilePath = currDir + r'\config.ini'
-        print(f"{configFilePath}")
+    def get_logging_path(self):
         return self.config.get('PATHS', 'loggingPath')
 
-    def getSerialPort(self, comm_type):
-        return self.config.get('COMMUNICATION', 'serialPort' + comm_type)
+    def get_serial_port(self, comm_type):
+        return self.config.get('SERIALCOMMUNICATION', 'serialPort' + comm_type)
 
-    def getBaudrate(self, comm_type):
-        return int(self.config.get('COMMUNICATION', 'baudrate' + comm_type))
+    def get_baudrate(self, comm_type):
+        return int(self.config.get('SERIALCOMMUNICATION', 'baudrate' + comm_type))
 
-    def getTimeout(self) -> float:
+    def get_timeout(self) -> Union[float, None]:
         try:
-            return float(self.config.get('COMMUNICATION', 'timeout'))
+            return float(self.config.get('SERIALCOMMUNICATION', 'timeout'))
         except ValueError:
             return None
+
+    def get_http_host(self) -> str:
+        return self.config.get('HTTPSERVER', 'host')
+
+    def get_http_port(self) -> int:
+        return int(self.config.get('HTTPSERVER', 'port'))

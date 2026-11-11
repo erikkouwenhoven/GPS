@@ -10,6 +10,11 @@
     <h1>Arion</h1>
 
     <div class="centered">
+        <label>Serial connection</label>
+        <label id="serial_connection">xxx</label>
+    </div>
+
+    <div class="centered">
         <label>Running since</label>
         <label id="running_since">xxx</label>
     </div>
@@ -43,6 +48,16 @@
     <div class="centered">
         <label>Hor. dilution</label>
         <label id="hor_dilution">xxx</label>
+    </div>
+
+    <div class="centered">
+        <!-- Download is een simpele GET-link (gestyled als knop) -->
+        <a href="/download" class="button-style">Download</a>
+
+        <!-- Stop is een actie en blijft een POST-formulier -->
+        <form method="POST" action="/stop" style="display:inline;">
+            <button type="submit">Stop acquisition</button>
+        </form>
     </div>
 
 </body>

@@ -1,15 +1,16 @@
 from datetime import datetime
-from Utils.location import Location
+from Application.location import Location
 
 
 class Model:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.start_time_stamp: float = datetime.now().timestamp()
+        self.is_running_connector: dict[str, bool] = {}
         self.fix_datetime: datetime | None = None
         self.last_reading_timestamp: datetime | None = None
         self.speed_knots: float | None = None
-        self.location: Location | None = None
+        self.locations: list[Location] = []
         self.num_satellites: int | None = None
         self.height: float | None = None
         self.height_unit: bytes | None = None
@@ -24,7 +25,7 @@ class Model:
 
     def set_reading(self, speed_knots: float, location: Location) -> None:
         self.speed_knots = speed_knots
-        self.location = location
+        self.locations.append(location)
         self.last_reading_timestamp = datetime.now()
 
     def set_num_satellites(self, num_satellites):
@@ -38,3 +39,13 @@ class Model:
 
     def set_hor_dilution(self, hor_dilution):
         self.hor_dilution = hor_dilution
+
+    def set_is_running(self, connector_name: str, is_running: bool) -> None:
+        self.is_running_connector[connector_name] = is_running
+
+    @property
+    def location(self) -> Location | None:
+        try:
+            return self.locations[-1]
+        except IndexError:
+            return None

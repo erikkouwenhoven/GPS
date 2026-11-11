@@ -67,22 +67,21 @@ class NMEAMessage:
             return None
 
     def update_check_sum(self) -> NMEAMessage | None:
-        try:
-            i_end = self.sentence.find(b'*')
-        except ValueError:
-            return None
-        self.sentence = self.sentence[:i_end + 1] + self.calculate_check_sum()
-        return self
-
-    def items(self) -> list[bytes] | None:
-        if bare_sentence := self.bare_sentence():
-            return [item for item in bare_sentence.split(b',')][1:]
+        if check_sum := self.calculate_check_sum():
+            try:
+                i_end = self.sentence.find(b'*')
+            except ValueError:
+                return None
+            self.sentence = self.sentence[:i_end + 1] + check_sum
+            return self
         else:
             return None
 
-    @classmethod
-    def from_items(cls, items: list[bytes]) -> NMEAMessage:
-        sentence = b''
+    def items(self) -> list[bytes]:
+        if bare_sentence := self.bare_sentence():
+            return [item for item in bare_sentence.split(b',')][1:]
+        else:
+            return []
 
     def __repr__(self):
         return str(self.sentence)

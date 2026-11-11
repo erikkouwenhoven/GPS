@@ -1,0 +1,4 @@
+pytz
+aiohttp
+pyserial-asyncio
+beautifulsoup4

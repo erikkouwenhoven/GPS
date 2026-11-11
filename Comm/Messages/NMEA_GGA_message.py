@@ -64,7 +64,7 @@ class GGAMessage:
             if self.items[GGAMessage.Coding.index('GPS_QUALITY')] != 0:
                 return True
             return False
-        except ValueError:
+        except (ValueError, IndexError):
             return False
 
     @property
@@ -73,7 +73,7 @@ class GGAMessage:
             if num := int(self.items[GGAMessage.Coding.index('NUM_SATELLITES')]):
                 return num
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -82,7 +82,7 @@ class GGAMessage:
             if val := float(self.items[GGAMessage.Coding.index('HOR_DILUTION_OF_PRECISION')]):
                 return val
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -91,7 +91,7 @@ class GGAMessage:
             if val := float(self.items[GGAMessage.Coding.index('HEIGHT')]):
                 return val
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None
 
     @property
@@ -100,5 +100,5 @@ class GGAMessage:
             if unit := self.items[GGAMessage.Coding.index('HEIGHT_UNIT')]:
                 return unit
             return None
-        except ValueError:
+        except (ValueError, IndexError):
             return None

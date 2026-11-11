@@ -20,13 +20,13 @@ class Location:
     def __init__(self, lat_str: str, lat_hemi: str, long_str: str, long_hemi: str):
         self.latitude: float | None = Location.from_nmea0183(lat_str)
         self.longitude: float | None = Location.from_nmea0183(long_str)
-        if lat_hemi != 'N':
+        if lat_hemi != 'N' and self.latitude:
             self.latitude = -self.latitude
-        if long_hemi != 'E':
+        if long_hemi != 'E' and self.longitude:
             self.longitude = -self.longitude
 
     @staticmethod
-    def from_nmea0183(in_str: str) -> float:
+    def from_nmea0183(in_str: str) -> float | None:
         # 2 karakters voor de decimale punt zijn voor de minuten
         if (dec_pt := in_str.find('.')) != -1:
             try:
