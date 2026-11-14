@@ -27,11 +27,11 @@ class WebServer:
         @routes.get('/download')
         async def handle_download(request):
             # Pad naar het bestand dat je wilt laten downloaden
-            file_path = r"C:\Users\erikk\PycharmProjects\GPS\Application\GPX\filename.xml"  # TODO uit settings halen, fienaam opbouwn uit datum
-            export_gpx(self.model.locations, file_path)
-
+            file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings().get_rel_gpx_path(),
+                                     "trip" + datetime.now().strftime("%d%m%y") + ".gpx")
             if not os.path.exists(file_path):
                 return web.Response(text="Bestand niet gevonden", status=404)
+            export_gpx(self.model.locations, file_path)
 
             # Logische return voor download: web.FileResponse
             # 'headers' dwingen de browser om het bestand op te slaan onder een specifieke naam
@@ -97,5 +97,17 @@ def main_form(document: str, model: Model):
 
     if hor_dilution_label := soup.find(id="hor_dilution"):
         hor_dilution_label.string = f"{model.hor_dilution}"
+
+    if speed_water_label := soup.find(id="speed_water"):
+        speed_water_label.string = f"{model.water_speed_knots} knots"
+
+    if water_temp_label := soup.find(id="water_temp"):
+        water_temp_label.string = f"{model.water_temp} C"
+
+    if trip_label := soup.find(id="trip"):
+        trip_label.string = f"{model.curr_dist_in_nm} nm"
+
+    if total_label := soup.find(id="total"):
+        total_label.string = f"{model.total_dist_in_nm} nm"
 
     return web.Response(text=soup.prettify(), content_type='text/html')

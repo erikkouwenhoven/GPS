@@ -2,7 +2,10 @@ import asyncio
 import logging
 from Application.model import Model
 from Comm.Messages.NMEA_GGA_message import GGAMessage
+from Comm.Messages.NMEA_MTW_message import MTWMessage
 from Comm.Messages.NMEA_RMC_message import RMCMessage
+from Comm.Messages.NMEA_VHW_message import VHWMessage
+from Comm.Messages.NMEA_VLW_message import VLWMessage
 from Comm.Messages.NMEA_VTG_message import VTGMessage
 from Comm.Messages.nmea_message import NMEAMessage
 from Comm.async_serialconnector import AsyncSerialConnector
@@ -22,13 +25,22 @@ class Processor:
         self.rs422_connector = rs422_connector
         self.model = model
 
-    @staticmethod
-    async def proc_rs422_line(line_bytes: bytes) -> None:
-        print(f"Received RS422 Message: {line_bytes!r}")
+    async def proc_rs422_line(self, line_bytes: bytes) -> None:
         logging.debug(f"Received RS422 Message: {line_bytes!r}")
+        sentence_id = NMEAMessage(line_bytes).sentence_id()
+        if sentence_id == MTWMessage.SENTENCE_ID:
+            mtw_msg = MTWMessage(line_bytes)
+            self.model.set_water_temp(mtw_msg.temp_in_celsius)
+        elif sentence_id == VLWMessage.SENTENCE_ID:
+            vlw_msg = VLWMessage(line_bytes)
+            self.model.set_curr_dist_in_nm(vlw_msg.curr_dist_in_nm)
+            self.model.set_total_dist_in_nm(vlw_msg.total_dist_in_nm)
+        elif sentence_id == VHWMessage.SENTENCE_ID:
+            vhw_msg = VHWMessage(line_bytes)
+            self.model.set_water_speed_knots(vhw_msg.water_speed_knots)
 
     async def proc_gps_line(self, line_bytes: bytes) -> None:
-        logging.debug(f"proc_gps_line: {line_bytes!r}")
+        logging.debug(f"Received GPS Message: {line_bytes!r}")
         sentence_id = NMEAMessage(line_bytes).sentence_id()
         if sentence_id == RMCMessage.SENTENCE_ID:
             logging.debug(f"Processing RMC: {line_bytes!r}")

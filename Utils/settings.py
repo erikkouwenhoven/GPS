@@ -16,6 +16,9 @@ class Settings:
     def get_logging_path(self):
         return self.config.get('PATHS', 'loggingPath')
 
+    def get_rel_gpx_path(self):
+        return self.config.get('PATHS', 'relGPXPath')
+
     def get_serial_port(self, comm_type):
         return self.config.get('SERIALCOMMUNICATION', 'serialPort' + comm_type)
 

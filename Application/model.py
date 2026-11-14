@@ -15,6 +15,10 @@ class Model:
         self.height: float | None = None
         self.height_unit: bytes | None = None
         self.hor_dilution: float | None = None
+        self.water_temp: float | None = None
+        self.curr_dist_in_nm: float | None = None
+        self.total_dist_in_nm: float | None = None
+        self.water_speed_knots: float | None = None
 
     @property
     def has_fix(self) -> bool:
@@ -42,6 +46,18 @@ class Model:
 
     def set_is_running(self, connector_name: str, is_running: bool) -> None:
         self.is_running_connector[connector_name] = is_running
+
+    def set_water_temp(self, water_temp: float | None) -> None:
+        self.water_temp = water_temp
+
+    def set_curr_dist_in_nm(self, curr_dist_in_nm: float | None) -> None:
+        self.curr_dist_in_nm = curr_dist_in_nm
+
+    def set_total_dist_in_nm(self, total_dist_in_nm: float | None) -> None:
+        self.total_dist_in_nm = total_dist_in_nm
+
+    def set_water_speed_knots(self, water_speed_knots: float | None) -> None:
+        self.water_speed_knots = water_speed_knots
 
     @property
     def location(self) -> Location | None:
