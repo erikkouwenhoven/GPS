@@ -23,13 +23,8 @@ def create_xml(data: list[Location], route_name: str) -> ET.ElementTree:
     return ET.ElementTree(root)
 
 
-def export_gpx(data: list[Location], gpx_file_name: str) -> None:
+def export_gpx(data: list[Location], trip_name, gpx_file_name: str) -> None:
     # if os.path.exists(gpx_file_name):
     #     return False, f"File {gpx_file_name} already exists"
-    tree = create_xml(data, "Route 11nov2026")
-    tree.write(r"C:\Users\erikk\PycharmProjects\GPS\Application\GPX\filename.xml", encoding="utf-8",
-    xml_declaration=True)
-
-
-if __name__ == "__main__":
-    export_gpx([], "")
+    tree = create_xml(data, trip_name)
+    tree.write(gpx_file_name, encoding="utf-8", xml_declaration=True)
